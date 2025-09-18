@@ -1,0 +1,93 @@
+type CommandResponse {
+  "Response code"
+  code: Int
+  "Response message"
+  message: String
+}
+
+type ReporterReport {
+  "Report ID"
+  id: ID!
+  "name"
+  name: String!
+  "organization id"
+  organizationId: String!
+  "Report description"
+  description: String
+  "Report active flag"
+  active: Boolean!  
+  "object metadata"
+  metadata: ReporterReportMetadata
+}
+
+type ReporterReportMetadata {
+    createdBy: String
+		createdAt: BigInt
+		updatedBy: String
+		updatedAt: BigInt
+}
+
+type ReporterReportListing {
+  "Listing"
+  listing: [ReporterReport]
+  "query total result count"
+  queryTotalResultCount: Int,  
+}
+
+
+input ReporterReportFilterInput {
+  "Name"
+  name: String
+  "organization id"
+  organizationId: String!
+  "Report active flag"
+  active: Boolean
+}
+
+input ReporterReportPaginationInput {
+  "Page"
+  page: Int!
+  "Count"
+  count: Int!
+  "query total result count flag"
+  queryTotalResultCount: Boolean
+}
+
+input ReporterReportSortInput {
+  field: String!,
+  asc: Boolean!,
+}
+
+input ReporterReportInput {
+  "name"
+  name: String
+  "organization id"
+  organizationId: String!
+  "Report description"
+  description: String
+  "Report active flag"
+  active: Boolean
+}
+
+
+type Query {
+  "Get Reports filtered "
+  ReporterReportListing(filterInput: ReporterReportFilterInput, paginationInput: ReporterReportPaginationInput, sortInput: ReporterReportSortInput): ReporterReportListing
+  "Get Report by its id"
+  ReporterReport(id: ID!, organizationId: String!): ReporterReport
+}
+
+type Mutation {
+  "Create a new Report"
+  ReporterCreateReport(input: ReporterReportInput!): ReporterReport
+  "Update an Report"
+  ReporterUpdateReport(id: ID!, input: ReporterReportInput!, merge: Boolean!): ReporterReport  
+  "Deletes an Report"
+  ReporterDeleteReports(ids: [ID]!): CommandResponse  
+}
+
+
+type Subscription {
+  "This events is triggered when a report updated or deleted"
+  ReporterReportModified(id: ID!): ReporterReport
+}
