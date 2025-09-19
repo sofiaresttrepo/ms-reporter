@@ -70,11 +70,32 @@ input ReporterReportInput {
 }
 
 
+type FleetStatistics {
+  "Total vehicles"
+  totalVehicles: Int!
+  "Vehicles by type"
+  vehiclesByType: JSON
+  "Vehicles by power source"
+  vehiclesByPowerSource: JSON
+  "Vehicles by decade"
+  vehiclesByDecade: JSON
+  "Vehicles by speed range"
+  vehiclesBySpeedRange: JSON
+  "Average horsepower"
+  averageHp: Float!
+  "Total HP sum"
+  totalHpSum: Int!
+  "Total HP count"
+  totalHpCount: Int!
+}
+
 type Query {
   "Get Reports filtered "
   ReporterReportListing(filterInput: ReporterReportFilterInput, paginationInput: ReporterReportPaginationInput, sortInput: ReporterReportSortInput): ReporterReportListing
   "Get Report by its id"
   ReporterReport(id: ID!, organizationId: String!): ReporterReport
+  "Get fleet statistics"
+  VehicleStatsFleetStatistics: FleetStatistics
 }
 
 type Mutation {
@@ -90,4 +111,6 @@ type Mutation {
 type Subscription {
   "This events is triggered when a report updated or deleted"
   ReporterReportModified(id: ID!): ReporterReport
+  "This event is triggered when fleet statistics are updated"
+  FleetStatisticsUpdated: FleetStatistics
 }

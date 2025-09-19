@@ -19,6 +19,10 @@ export const MicroFrontendConfig = {
             component: React.lazy(() => import('./reports/Reports'))
         },
         {
+            path: '/report-mng/fleet-dashboard',
+            component: React.lazy(() => import('./dashboard/FleetDashboard'))
+        },
+        {
             path: '/report-mng',
             component: () => <Redirect to="/report-mng/reports" />
         }
@@ -29,14 +33,24 @@ export const MicroFrontendConfig = {
             'type': 'collapse',
             'icon': 'settings',
             'priority': 100,
-            children: [{
-                'id': 'reporter-report-management',
-                'type': 'item',
-                'icon': 'business',
-                'url': '/report-mng',
-                'priority': 2000,
-                auth
-            }]
+            children: [
+                {
+                    'id': 'reporter-report-management',
+                    'type': 'item',
+                    'icon': 'business',
+                    'url': '/report-mng',
+                    'priority': 2000,
+                    auth
+                },
+                {
+                    'id': 'fleet-dashboard',
+                    'type': 'item',
+                    'icon': 'dashboard',
+                    'url': '/report-mng/fleet-dashboard',
+                    'priority': 2001,
+                    auth
+                }
+            ]
         }
     ],
     i18nLocales: i18n.locales

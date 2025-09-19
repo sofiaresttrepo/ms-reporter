@@ -76,6 +76,9 @@ module.exports = {
         },
         ReporterReport(root, args, context) {
             return sendToBackEndHandler$(root, args, context, READ_ROLES, 'query', 'Report', 'ReporterReport').toPromise();
+        },
+        VehicleStatsFleetStatistics(root, args, context) {
+            return sendToBackEndHandler$(root, args, context, READ_ROLES, 'query', 'VehicleStats', 'VehicleStatsFleetStatistics').toPromise();
         }
     },
 
@@ -114,6 +117,25 @@ module.exports = {
                         : false;
                 }
             )
+        },
+        FleetStatisticsUpdated: {
+            subscribe: withFilter(
+                (payload, variables, context, info) => {
+                    //Checks the roles of the user, if the user does not have at least one of the required roles, an error will be thrown
+                    RoleValidator.checkAndThrowError(
+                        context.authToken.realm_access.roles,
+                        READ_ROLES,
+                        "VehicleStats",
+                        "FleetStatisticsUpdated",
+                        PERMISSION_DENIED_ERROR_CODE,
+                        "Permission denied"
+                    );
+                    return pubsub.asyncIterator("FleetStatisticsUpdated");
+                },
+                (payload, variables, context, info) => {
+                    return payload ? true : false;
+                }
+            )
         }
     }
 };
@@ -125,6 +147,15 @@ const eventDescriptors = [
     {
         backendEventName: "ReporterReportModified",
         gqlSubscriptionName: "ReporterReportModified",
+        dataExtractor: evt => evt.data, // OPTIONAL, only use if needed
+        onError: (error, descriptor) =>
+            console.log(`Error processing ${descriptor.backendEventName}`), // OPTIONAL, only use if needed
+        onEvent: (evt, descriptor) =>
+            console.log(`Event of type  ${descriptor.backendEventName} arrived`) // OPTIONAL, only use if needed
+    },
+    {
+        backendEventName: "FleetStatisticsUpdated",
+        gqlSubscriptionName: "FleetStatisticsUpdated",
         dataExtractor: evt => evt.data, // OPTIONAL, only use if needed
         onError: (error, descriptor) =>
             console.log(`Error processing ${descriptor.backendEventName}`), // OPTIONAL, only use if needed
