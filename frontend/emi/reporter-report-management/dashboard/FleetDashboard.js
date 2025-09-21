@@ -94,14 +94,13 @@ function FleetDashboard(props) {
 
     // Fleet statistics state
     const [statistics, setStatistics] = useState({
+        _id: null,
         totalVehicles: 0,
         vehiclesByType: {},
-        vehiclesByPowerSource: {},
         vehiclesByDecade: {},
-        vehiclesBySpeedRange: {},
-        averageHp: 0,
-        totalHpSum: 0,
-        totalHpCount: 0
+        vehiclesBySpeedClass: {},
+        hpStats: { min: 0, max: 0, sum: 0, count: 0, avg: 0 },
+        lastUpdated: null
     });
 
     //Translation services
@@ -142,9 +141,10 @@ function FleetDashboard(props) {
 
     // Memoized calculations
     const totalVehicles = statistics.totalVehicles || 0;
-    const averageHp = statistics.averageHp || 0;
-    const totalHpSum = statistics.totalHpSum || 0;
-    const totalHpCount = statistics.totalHpCount || 0;
+    const hpStats = statistics.hpStats || { min: 0, max: 0, sum: 0, count: 0, avg: 0 };
+    const averageHp = hpStats.avg || 0;
+    const totalHpSum = hpStats.sum || 0;
+    const totalHpCount = hpStats.count || 0;
 
     // Show loading state
     if (fleetLoading) {
@@ -219,23 +219,16 @@ function FleetDashboard(props) {
                         </Grid>
                         <Grid item xs={12} md={6}>
                             <CategoryBreakdown
-                                title="Vehicles by Power Source"
-                                data={statistics.vehiclesByPowerSource}
+                                title="Vehicles by Decade"
+                                data={statistics.vehiclesByDecade}
                                 color="secondary"
                             />
                         </Grid>
                         <Grid item xs={12} md={6}>
                             <CategoryBreakdown
-                                title="Vehicles by Decade"
-                                data={statistics.vehiclesByDecade}
+                                title="Vehicles by Speed Class"
+                                data={statistics.vehiclesBySpeedClass}
                                 color="textPrimary"
-                            />
-                        </Grid>
-                        <Grid item xs={12} md={6}>
-                            <CategoryBreakdown
-                                title="Vehicles by Speed Range"
-                                data={statistics.vehiclesBySpeedRange}
-                                color="textSecondary"
                             />
                         </Grid>
 
@@ -263,9 +256,9 @@ function FleetDashboard(props) {
                                         <Grid item xs={12} sm={6}>
                                             <Paper style={{ padding: '16px', backgroundColor: '#f5f5f5' }}>
                                                 <Typography variant="body1" color="textPrimary">
-                                                    <strong>Most Common Power Source:</strong> {
+                                                    <strong>Most Common Speed Class:</strong> {
                                                         (() => {
-                                                            const entries = Object.entries(statistics.vehiclesByPowerSource || {});
+                                                            const entries = Object.entries(statistics.vehiclesBySpeedClass || {});
                                                             const sorted = entries.sort(([,a], [,b]) => b - a);
                                                             return sorted.length > 0 ? sorted[0][0] : 'N/A';
                                                         })()
@@ -289,12 +282,10 @@ function FleetDashboard(props) {
                                         <Grid item xs={12} sm={6}>
                                             <Paper style={{ padding: '16px', backgroundColor: '#f5f5f5' }}>
                                                 <Typography variant="body1" color="textPrimary">
-                                                    <strong>Most Common Speed Range:</strong> {
-                                                        (() => {
-                                                            const entries = Object.entries(statistics.vehiclesBySpeedRange || {});
-                                                            const sorted = entries.sort(([,a], [,b]) => b - a);
-                                                            return sorted.length > 0 ? sorted[0][0] : 'N/A';
-                                                        })()
+                                                    <strong>Last Updated:</strong> {
+                                                        statistics.lastUpdated 
+                                                            ? new Date(statistics.lastUpdated).toLocaleString()
+                                                            : 'N/A'
                                                     }
                                                 </Typography>
                                             </Paper>

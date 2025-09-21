@@ -71,22 +71,58 @@ input ReporterReportInput {
 
 
 type FleetStatistics {
-  "Total vehicles"
+  "Fleet statistics document ID"
+  _id: ID!
+  "Total number of vehicles processed"
   totalVehicles: Int!
-  "Vehicles by type"
-  vehiclesByType: JSON
-  "Vehicles by power source"
-  vehiclesByPowerSource: JSON
-  "Vehicles by decade"
-  vehiclesByDecade: JSON
-  "Vehicles by speed range"
-  vehiclesBySpeedRange: JSON
-  "Average horsepower"
-  averageHp: Float!
-  "Total HP sum"
-  totalHpSum: Int!
-  "Total HP count"
-  totalHpCount: Int!
+  "Vehicles grouped by type"
+  vehiclesByType: FleetTypeStats
+  "Vehicles grouped by decade"
+  vehiclesByDecade: FleetDecadeStats
+  "Vehicles grouped by speed class"
+  vehiclesBySpeedClass: FleetSpeedClassStats
+  "Horsepower statistics"
+  hpStats: FleetHpStats
+  "Last update timestamp"
+  lastUpdated: String!
+}
+
+type FleetTypeStats {
+  SUV: Int
+  PickUp: Int
+  Sedan: Int
+  Coupe: Int
+  Convertible: Int
+  Truck: Int
+  Van: Int
+  Hatchback: Int
+}
+
+type FleetDecadeStats {
+  decade1980s: Int
+  decade1990s: Int
+  decade2000s: Int
+  decade2010s: Int
+  decade2020s: Int
+}
+
+type FleetSpeedClassStats {
+  Lento: Int
+  Normal: Int
+  Rapido: Int
+}
+
+type FleetHpStats {
+  "Minimum horsepower"
+  min: Float!
+  "Maximum horsepower"
+  max: Float!
+  "Sum of all horsepower values"
+  sum: Float!
+  "Count of vehicles with horsepower data"
+  count: Int!
+  "Average horsepower (calculated)"
+  avg: Float!
 }
 
 type Query {

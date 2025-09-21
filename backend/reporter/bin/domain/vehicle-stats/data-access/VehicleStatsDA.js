@@ -239,6 +239,155 @@ class VehicleStatsDA {
       map(result => result && result.value ? { ...result.value, id: result.value._id } : undefined)
     );
   }
+
+  // ===== FLEET STATISTICS METHODS =====
+
+  /**
+   * Gets processed aids from processed_vehicles collection
+   * @param {Array} aids - Array of aids to check
+   * @returns {Observable} Observable with array of processed aids
+   */
+  static getProcessedAids$(aids) {
+    const collection = mongoDB.db.collection('processed_vehicles');
+    return defer(() => collection.find(
+      { aid: { $in: aids } },
+      { projection: { aid: 1, _id: 0 } }
+    ).toArray())
+      .pipe(
+        map(results => results.map(r => r.aid))
+      );
+  }
+
+  /**
+   * Inserts processed aids in bulk
+   * @param {Array} aids - Array of aids to insert
+   * @returns {Observable} Observable with result
+   */
+  static insertProcessedAids$(aids) {
+    const collection = mongoDB.db.collection('processed_vehicles');
+    const documents = aids.map(aid => ({ aid, processedAt: new Date() }));
+
+    return defer(() => collection.insertMany(documents))
+      .pipe(
+        map(result => result.insertedCount)
+      );
+  }
+
+  /**
+   * Updates fleet statistics with batch data
+   * @param {Object} batchStats - Statistics from the batch
+   * @returns {Observable} Observable with updated statistics
+   */
+  static updateFleetStatistics$(batchStats) {
+    const collection = mongoDB.db.collection('fleet_statistics');
+    const update = {
+      $inc: {
+        totalVehicles: batchStats.totalVehicles
+      },
+      $set: {
+        lastUpdated: new Date().toISOString()
+      }
+    };
+
+    // Add type increments
+    Object.keys(batchStats.vehiclesByType).forEach(type => {
+      update.$inc[`vehiclesByType.${type}`] = batchStats.vehiclesByType[type];
+    });
+
+    // Add decade increments
+    Object.keys(batchStats.vehiclesByDecade).forEach(decade => {
+      update.$inc[`vehiclesByDecade.${decade}`] = batchStats.vehiclesByDecade[decade];
+    });
+
+    // Add speed class increments
+    Object.keys(batchStats.vehiclesBySpeedClass).forEach(speedClass => {
+      update.$inc[`vehiclesBySpeedClass.${speedClass}`] = batchStats.vehiclesBySpeedClass[speedClass];
+    });
+
+    // Add HP stats increments
+    update.$inc['hpStats.sum'] = batchStats.hpStats.sum;
+    update.$inc['hpStats.count'] = batchStats.hpStats.count;
+
+    // Add min/max operations
+    if (batchStats.hpStats.min !== Infinity) {
+      update.$min = { 'hpStats.min': batchStats.hpStats.min };
+    }
+    if (batchStats.hpStats.max !== -Infinity) {
+      update.$max = { 'hpStats.max': batchStats.hpStats.max };
+    }
+
+    return defer(() => collection.findOneAndUpdate(
+      { _id: 'real_time_fleet_stats' },
+      update,
+      { 
+        returnOriginal: false,
+        upsert: true
+      }
+    ))
+      .pipe(
+        map(result => {
+          const stats = result.value;
+          // Calculate average
+          if (stats.hpStats && stats.hpStats.count > 0) {
+            stats.hpStats.avg = stats.hpStats.sum / stats.hpStats.count;
+          }
+          
+          // Map decade keys to GraphQL-compatible names
+          if (stats.vehiclesByDecade) {
+            const mappedDecades = {};
+            Object.keys(stats.vehiclesByDecade).forEach(decade => {
+              const mappedKey = `decade${decade}`;
+              mappedDecades[mappedKey] = stats.vehiclesByDecade[decade];
+            });
+            stats.vehiclesByDecade = mappedDecades;
+          }
+          
+          return stats;
+        })
+      );
+  }
+
+  /**
+   * Gets current fleet statistics
+   * @returns {Observable} Observable with fleet statistics
+   */
+  static GetFleetStatistics$() {
+    const collection = mongoDB.db.collection('fleet_statistics');
+    
+    return defer(() => collection.findOne({ _id: 'real_time_fleet_stats' }))
+      .pipe(
+        map(stats => {
+          if (!stats) {
+            return {
+              _id: 'real_time_fleet_stats',
+              totalVehicles: 0,
+              vehiclesByType: {},
+              vehiclesByDecade: {},
+              vehiclesBySpeedClass: {},
+              hpStats: { min: 0, max: 0, sum: 0, count: 0, avg: 0 },
+              lastUpdated: new Date().toISOString()
+            };
+          }
+          
+          // Calculate average if not present
+          if (stats.hpStats && stats.hpStats.count > 0 && !stats.hpStats.avg) {
+            stats.hpStats.avg = stats.hpStats.sum / stats.hpStats.count;
+          }
+          
+          // Map decade keys to GraphQL-compatible names
+          if (stats.vehiclesByDecade) {
+            const mappedDecades = {};
+            Object.keys(stats.vehiclesByDecade).forEach(decade => {
+              const mappedKey = `decade${decade}`;
+              mappedDecades[mappedKey] = stats.vehiclesByDecade[decade];
+            });
+            stats.vehiclesByDecade = mappedDecades;
+          }
+          
+          return stats;
+        })
+      );
+  }
 }
 
 /**

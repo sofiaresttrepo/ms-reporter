@@ -64,34 +64,11 @@ class VehicleStatsCRUD {
   }
 
   /**
-   * Start processing vehicle events
+   * Start processing vehicle events - DISABLED in favor of VehicleEventsProcessor
    */
   startProcessing$() {
-    if (this.isProcessing) {
-      ConsoleLogger.i("Vehicle stats processing is already running");
-      return of(null);
-    }
-
-    this.isProcessing = true;
-    ConsoleLogger.i("Starting vehicle stats processing");
-
-    // Wait a bit for MongoDB to be ready, then start processing
-    return new Observable(observer => {
-      setTimeout(() => {
-        try {
-          // Subscribe to MQTT events
-          this.subscribeToMQTTEvents$();
-
-          // Start batch processing
-          this.startBatchProcessing$();
-
-          observer.next("Vehicle stats processing started successfully");
-          observer.complete();
-        } catch (error) {
-          observer.error(error);
-        }
-      }, 2000); // Wait 2 seconds for MongoDB to be ready
-    });
+    ConsoleLogger.i("VehicleStatsCRUD.startProcessing$ is disabled - using VehicleEventsProcessor instead");
+    return of("VehicleStatsCRUD processing disabled");
   }
 
   /**
